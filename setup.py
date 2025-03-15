@@ -14,7 +14,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "cato=cato.cli:main",
+            "cato=cato.cato.cli:main",
         ],
     },
     package_data={
