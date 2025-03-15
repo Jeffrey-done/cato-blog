@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="{{ config.language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签: {{ tag }} - {{ config.site_name }}</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/">&larr; 返回首页</a>
+            <a href="/tags.html">所有标签</a>
+        </nav>
+
+        <div class="header">
+            <h1>标签: {{ tag }}</h1>
+            <p>共 {{ posts|length }} 篇文章</p>
+        </div>
+
+        <ul class="post-list">
+            {% for post in posts %}
+            <li class="post-item">
+                <h2 class="post-title">
+                    <a href="{{ post.metadata.url }}">{{ post.metadata.title }}</a>
+                </h2>
+                <div class="post-meta">
+                    {{ post.metadata.date.strftime(config.date_format) }}
+                    {% if post.metadata.author %}
+                    · {{ post.metadata.author }}
+                    {% endif %}
+                </div>
+                <div class="post-excerpt">
+                    {{ post.metadata.content[:200] + '...' if post.metadata.content|length > 200 else post.metadata.content }}
+                </div>
+                {% if post.metadata.tags %}
+                <div class="post-tags">
+                    {% for t in post.metadata.tags %}
+                    <a href="/tags/{{ t }}.html" class="tag {% if t == tag %}current-tag{% endif %}">{{ t }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+
+        <footer class="footer">
+            <p>&copy; {{ now().year }} {{ config.site_name }}. Powered by Cato.</p>
+        </footer>
+    </div>
+</body>
+</html> 

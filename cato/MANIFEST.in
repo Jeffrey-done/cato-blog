@@ -1,0 +1,3 @@
+include README.md
+include cato/config.yml
+recursive-include cato/templates * 

@@ -1,0 +1,4 @@
+include README.md
+include LICENSE
+recursive-include cato/templates *
+include cato/config.yml 

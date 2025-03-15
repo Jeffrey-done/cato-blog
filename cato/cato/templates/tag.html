@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="{{ config.language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签: {{ tag }} - {{ config.site_name }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .nav {
+            margin-bottom: 2rem;
+        }
+        .nav a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        .post-list {
+            list-style: none;
+            padding: 0;
+        }
+        .post-item {
+            background: white;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .post-title {
+            font-size: 1.5rem;
+            margin: 0 0 0.5rem 0;
+        }
+        .post-title a {
+            color: #333;
+            text-decoration: none;
+        }
+        .post-title a:hover {
+            color: #007bff;
+        }
+        .post-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .post-excerpt {
+            color: #444;
+            margin-bottom: 1rem;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            margin: 0 0.3rem 0.3rem 0;
+            background: #e9ecef;
+            border-radius: 4px;
+            color: #495057;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+        .tag:hover {
+            background: #dee2e6;
+        }
+        .current-tag {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/">&larr; 返回首页</a>
+            <a href="/tags.html">所有标签</a>
+        </nav>
+
+        <div class="header">
+            <h1>标签: {{ tag }}</h1>
+            <p>共 {{ posts|length }} 篇文章</p>
+        </div>
+
+        <ul class="post-list">
+            {% for post in posts %}
+            <li class="post-item">
+                <h2 class="post-title">
+                    <a href="{{ post.metadata.url }}">{{ post.metadata.title }}</a>
+                </h2>
+                <div class="post-meta">
+                    {{ post.metadata.date.strftime(config.date_format) }}
+                    {% if post.metadata.author %}
+                    · {{ post.metadata.author }}
+                    {% endif %}
+                </div>
+                <div class="post-excerpt">
+                    {{ post.metadata.content[:200] + '...' if post.metadata.content|length > 200 else post.metadata.content }}
+                </div>
+                {% if post.metadata.tags %}
+                <div class="post-tags">
+                    {% for t in post.metadata.tags %}
+                    <a href="/tags/{{ t }}.html" class="tag {% if t == tag %}current-tag{% endif %}">{{ t }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html> 

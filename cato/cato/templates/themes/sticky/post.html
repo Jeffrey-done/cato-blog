@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="{{ config.language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.metadata.title }} - {{ config.site_name }}</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/">&larr; 返回首页</a>
+        </nav>
+
+        <article class="article">
+            <h1 class="article-title">{{ post.metadata.title }}</h1>
+            <div class="article-meta">
+                发布于 {{ post.metadata.date.strftime(config.date_format) }}
+                {% if post.metadata.author %}
+                · 作者: {{ post.metadata.author }}
+                {% endif %}
+            </div>
+            
+            <div class="article-content">
+                {{ post.metadata.content }}
+            </div>
+
+            {% if post.metadata.tags %}
+            <div class="article-tags">
+                标签：
+                {% for tag in post.metadata.tags %}
+                <a href="/tags/{{ tag }}.html" class="tag">{{ tag }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </article>
+    </div>
+</body>
+</html> 

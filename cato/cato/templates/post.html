@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="{{ config.language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.metadata.title }} - {{ config.site_name }}</title>
+    <meta name="description" content="{{ post.content[:200]|striptags }}">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem 0;
+        }
+        .nav {
+            margin-bottom: 2rem;
+        }
+        .nav a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        .article {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .article-title {
+            font-size: 2rem;
+            margin: 0 0 1rem 0;
+            color: #333;
+        }
+        .article-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .article-content {
+            margin-bottom: 2rem;
+        }
+        .article-content h1,
+        .article-content h2,
+        .article-content h3,
+        .article-content h4,
+        .article-content h5,
+        .article-content h6 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .article-content p {
+            margin-bottom: 1rem;
+        }
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .article-content pre {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .article-content code {
+            background: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .article-content blockquote {
+            margin: 1rem 0;
+            padding-left: 1rem;
+            border-left: 4px solid #007bff;
+            color: #666;
+        }
+        .article-tags {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            margin: 0 0.3rem 0.3rem 0;
+            background: #e9ecef;
+            border-radius: 4px;
+            color: #495057;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+        .tag:hover {
+            background: #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav">
+            <a href="/">&larr; 返回首页</a>
+        </nav>
+
+        <article class="article">
+            <h1 class="article-title">{{ post.metadata.title }}</h1>
+            <div class="article-meta">
+                发布于 {{ post.metadata.date.strftime(config.date_format) }}
+                {% if post.metadata.author %}
+                · 作者: {{ post.metadata.author }}
+                {% endif %}
+            </div>
+            
+            <div class="article-content">
+                {{ post.metadata.content }}
+            </div>
+
+            {% if post.metadata.tags %}
+            <div class="article-tags">
+                标签：
+                {% for tag in post.metadata.tags %}
+                <a href="/tags/{{ tag }}.html" class="tag">{{ tag }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </article>
+    </div>
+</body>
+</html> 

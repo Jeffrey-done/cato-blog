@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+        <title>{{ config.site_name }}</title>
+        <link>{{ config.site_url }}</link>
+        <description>{{ config.site_description }}</description>
+        <language>{{ config.language }}</language>
+        <pubDate>{{ now().strftime('%a, %d %b %Y %H:%M:%S +0000') }}</pubDate>
+
+        {% for post in posts %}
+        <item>
+            <title>{{ post.metadata.title }}</title>
+            <link>{{ post.metadata.url }}</link>
+            <description>{{ post.metadata.content[:200] }}...</description>
+            <pubDate>{{ post.metadata.date.strftime('%a, %d %b %Y %H:%M:%S +0000') }}</pubDate>
+            <guid>{{ post.metadata.url }}</guid>
+        </item>
+        {% endfor %}
+    </channel>
+</rss> 
