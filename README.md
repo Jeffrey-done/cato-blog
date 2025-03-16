@@ -9,6 +9,8 @@ Cato 是一个简单、高效的静态博客生成器，灵感来源于 Hexo，�
 - 📱 **响应式设计** - 所有主题都适配移动设备
 - 🔌 **简单命令** - 类似 Hexo 的简化命令（如 `cato g`、`cato s`）
 - 🛠️ **自定义主题** - 轻松创建和修改自己的主题
+- 📦 **双分支管理** - master分支用于展示，blog分支存储源文件
+- 🔄 **一键恢复** - 支持从blog分支快速恢复源文件
 
 ## 快速安装
 
@@ -72,6 +74,52 @@ cato clean
 cato c
 ```
 
+### 部署博客
+
+#### 部署展示页面（GitHub Pages）
+```bash
+cato deploy
+# 或使用简化命令
+cato d
+```
+这会将构建后的文件（public目录内容）推送到 master 分支。
+
+#### 部署源文件（用于备份或多设备同步）
+```bash
+cato deploy-source
+# 或使用简化命令
+cato ds
+```
+这会将所有源文件推送到 blog 分支，包括：
+- source/ 目录（文章和主题）
+- config.yml
+- 其他配置文件
+
+### 恢复博客文件
+如果你需要恢复之前的博客文件（比如在新设备上或系统更新后），可以使用：
+```bash
+cato restore
+# 或使用简化命令
+cato r
+```
+这个命令会：
+1. 自动备份当前文件（以防万一）
+2. 从 blog 分支恢复所有源文件
+3. 保持构建后的文件不变
+
+## 分支说明
+
+博客使用两个分支管理不同用途的文件：
+
+- **master 分支**：只包含构建后的文件，用于 GitHub Pages 展示
+  - 使用 `cato d` 命令更新
+  - 只包含 public 目录中的文件
+
+- **blog 分支**：包含所有源文件，用于备份和多设备同步
+  - 使用 `cato ds` 命令更新
+  - 包含所有源文件（文章、配置、主题等）
+  - 用于恢复博客内容
+
 ## 主题切换
 
 在 `config.yml` 文件中修改主题设置：
@@ -102,6 +150,21 @@ myblog/
 │   │       └── custom/ # 自定义主题
 │   └── assets/         # 资源文件
 └── public/             # 生成的静态文件
+```
+
+## 系统更新
+
+### 更新博客系统
+```bash
+pip install --upgrade cato-blog
+# 或从 GitHub 安装最新版本
+pip install --upgrade git+https://github.com/Jeffrey-done/cato-blog.git
+```
+
+### 更新后恢复文件
+如果系统更新后需要恢复原来的文件：
+```bash
+cato r  # 从 blog 分支恢复所有源文件
 ```
 
 ## 许可证
