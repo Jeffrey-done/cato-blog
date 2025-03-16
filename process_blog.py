@@ -135,6 +135,12 @@ def extract_template_from_master():
         # 分割后的第一部分作为header模板（但需要去掉head部分，因为我们单独处理它）
         header_template = pre_content_parts[0].replace(head_match.group(0), '')
         
+        # 移除导航栏（顶部的"返回首页"、"标签"、"RSS"链接）
+        header_template = re.sub(r'<nav\s+class=["\'](nav|navbar)["\'][^>]*>.*?</nav>', '', header_template, flags=re.DOTALL)
+        
+        # 移除标签云部分
+        header_template = re.sub(r'<div\s+class=["\'](tag-list)["\'][^>]*>.*?</div>', '', header_template, flags=re.DOTALL)
+        
         # 寻找在文章列表容器之后的内容作为footer模板
         post_content_parts = content.split('</div>\n</div>')
         if len(post_content_parts) < 2:
@@ -480,29 +486,6 @@ def generate_articles():
             # 确保标题是字符串
             title = str(title) if title else filename.replace('.md', '')
             
-            # 获取文章标签
-            tags = frontmatter.get('tags', [])
-            if isinstance(tags, str):
-                # 处理可能的标签格式 "[tag1, tag2]"
-                tags = tags.strip('[]').split(',')
-                tags = [tag.strip() for tag in tags]
-            elif not isinstance(tags, list):
-                tags = []
-            
-            # 确保至少有一个默认标签
-            if not tags:
-                tags = ['随笔']
-            
-            # 生成标签HTML
-            tags_html = ""
-            if tags:
-                tags_html = '<div class="post-tags">标签：'
-                for tag in tags:
-                    tag = tag.strip()
-                    if tag:
-                        tags_html += f'<a href="../index.html?tag={tag}" class="tag">{tag}</a> '
-                tags_html += '</div>'
-            
             # 添加到文章列表
             articles.append({
                 'title': title,
@@ -523,61 +506,19 @@ def generate_articles():
             else:
                 custom_head = custom_head.replace('</head>', f'<title>{title}</title></head>')
             
-            # 添加自定义样式
-            custom_head = custom_head.replace('</head>', '''
-    <style>
-        .top-nav {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            padding: 10px 0;
-        }
-        .top-nav a {
-            text-decoration: none;
-            color: #666;
-        }
-        .top-nav a:hover {
-            color: #333;
-        }
-        .post-tags {
-            margin-top: 30px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-            font-size: 0.9em;
-            color: #666;
-        }
-        .tag {
-            display: inline-block;
-            background: #f0f0f0;
-            padding: 2px 8px;
-            margin: 0 5px;
-            border-radius: 3px;
-            font-size: 0.9em;
-            color: #666;
-            text-decoration: none;
-        }
-        .tag:hover {
-            background: #e0e0e0;
-        }
-    </style>
-</head>''')
-            
             html = f"""<!DOCTYPE html>
 <html>
 {custom_head}
 {header_template}
-    <div class="top-nav">
-        <a href="../index.html">← 返回首页</a>
-        <a href="../index.html?tag=all">标签</a>
-        <a href="../rss.xml">RSS</a>
-    </div>
     <article class="post">
         <h1 class="post-title">{title}</h1>
         <div class="post-meta">发布日期: {date_formatted}</div>
         <div class="post-content">
             {html_content}
         </div>
-        {tags_html}
+        <div class="return-link">
+            <a href="../index.html">返回首页</a>
+        </div>
     </article>
 {footer_template}"""
             
@@ -614,27 +555,10 @@ def generate_articles():
         # 确保标题是字符串并清理日期前缀
         title = clean_title(str(article['title']) if article['title'] else article['filename'].replace('.html', ''))
         
-        # 获取文章标签用于筛选
-        article_tags = article.get('tags', ['随笔'])
-        if isinstance(article_tags, str):
-            article_tags = article_tags.strip('[]').split(',')
-            article_tags = [tag.strip() for tag in article_tags]
-        elif not isinstance(article_tags, list):
-            article_tags = ['随笔']
-        
-        # 生成标签HTML
-        tags_html = '<div class="post-tags">标签: '
-        for tag in article_tags:
-            tag = tag.strip()
-            if tag:
-                tags_html += f'<a href="index.html?tag={tag}">{tag}</a> '
-        tags_html += '</div>'
-        
         # 使用更简洁的HTML格式，只显示标题和预览内容
         article_list_html += f"""
-<div class="post-item" data-tags="{','.join(article_tags)}">
+<div class="post-item">
     <h2 class="post-title"><a href="posts/{article['filename']}">{title}</a></h2>
-    {tags_html}
     <div class="post-preview">{preview_text}</div>
 </div>
 """

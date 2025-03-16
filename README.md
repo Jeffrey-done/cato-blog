@@ -168,6 +168,9 @@ jobs:
           cp master-website/index.html master-website/index.html.backup
           python update_index.py master-website/index.html html_articles/article_list.html master-website/index.html
           
+          # 更新文章预览的CSS样式
+          python update_styles.py master-website/index.html
+          
       - name: 提交到master分支
         run: |
           cd master-website
@@ -184,20 +187,49 @@ jobs:
           fi
 ```
 
-4. 添加辅助脚本：在blog分支添加`process_blog.py`和`update_index.py`文件
+4. 在blog分支中添加以下辅助脚本：
+   - `process_blog.py`: 处理Markdown文章并生成HTML文件
+   - `update_index.py`: 智能更新首页脚本
+   - `update_styles.py`: 更新样式脚本
+
 5. 仓库设置：进入GitHub仓库的"Settings" > "Actions" > "General"，在"Workflow permissions"部分选择"Read and write permissions"并保存
+
+### 自动部署增强功能
+
+最新版本的自动部署功能增加了以下优化：
+
+1. **界面简化**：自动移除页面顶部的导航栏（"返回首页"、"标签"、"RSS"链接）和标签云，使博客页面更加简洁
+2. **标题优化**：自动清理文章标题中的日期前缀（如"2025-03-16-"），使标题显示更加美观
+3. **文章预览**：自动为每篇文章生成预览内容，在首页文章列表中显示
+4. **样式增强**：通过`update_styles.py`脚本自动应用文章预览样式，使首页更加美观
+5. **智能模板提取**：从现有页面智能提取模板，确保生成的页面与原始设计保持一致
+
+### 必要文件说明
+
+自动部署需要在blog分支中包含以下文件：
+
+1. `.github/workflows/auto-deploy.yml`: GitHub Actions工作流配置
+2. `process_blog.py`: 核心文章处理脚本
+3. `update_index.py`: 智能更新首页脚本
+4. `update_styles.py`: 更新样式脚本
+
+这些文件共同工作，确保博客内容自动更新，同时保持网站外观和风格一致。
 
 ### 自动部署工作原理
 
 当您推送内容到blog分支时：
 
-1. GitHub Actions自动触发
+1. GitHub Actions自动触发workflow
 2. 系统会检出blog分支，处理所有Markdown文章并生成HTML文件
+   - 自动清理文章标题中的日期前缀
+   - 提取文章预览内容
+   - 移除导航栏和标签云
 3. 然后检出master分支，并将新生成的文章和更新的首页添加到master分支
 4. 智能首页更新算法会保留原有网站的外观和样式，只更新文章列表部分
-5. 最后将变更推送到master分支，完成自动部署
+5. 更新网站样式，确保文章预览正确显示
+6. 最后将变更推送到master分支，完成自动部署
 
-这种方式特别适合使用Cato移动应用（cato-uni-app）撰写和管理博客内容的用户。
+这种方式特别适合使用Cato移动应用（cato-uni-app）撰写和管理博客内容的用户，实现真正的全自动化发布流程。
 
 ## 分支说明
 
