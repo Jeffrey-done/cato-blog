@@ -196,11 +196,40 @@ print("Hello, World!")
 祝您使用愉快！
 """)
         
+        # 创建 .gitignore 文件
+        with open('.gitignore', 'w', encoding='utf-8') as f:
+            f.write("""# 忽略所有文件和目录
+/*
+
+# 不忽略 public 目录中的内容
+!/*.html
+!/css/
+!/posts/
+!/tags/
+!feed.xml
+
+# 忽略系统文件
+.DS_Store
+Thumbs.db
+
+# 忽略 Python 缓存文件
+__pycache__/
+*.py[cod]
+""")
+
+        # 初始化 Git 仓库
+        os.system('git init')
+        
         print("✨ 博客初始化完成！")
         print("\n下一步：")
         print("1. 编辑 config.yml 配置文件")
         print("2. 运行 'cato serve' 或 'cato s' 启动开发服务器")
         print("3. 自定义主题位于 source/_templates/themes/ 目录")
+        print("\nGitHub Pages 部署说明：")
+        print("1. 在 GitHub 创建仓库：用户名.github.io")
+        print("2. 添加远程仓库：git remote add origin https://github.com/用户名/用户名.github.io.git")
+        print("3. 构建并部署：cato d")
+        print("\n注意：只有 public 目录中构建后的文件会被推送到 GitHub")
         
     except Exception as e:
         print(f"错误: 初始化博客失败 - {e}")
@@ -323,20 +352,42 @@ def clean(args):
         sys.exit(1)
 
 def deploy(args):
-    """部署到服务器"""
+    """部署博客到 GitHub Pages"""
     try:
-        # 先构建
+        # 构建博客
+        print("开始构建博客...")
         builder = BlogBuilder('config.yml')
         builder.build()
-        
-        # 读取部署配置
-        if not os.path.exists('deploy.yml'):
-            print("错误: 未找到部署配置文件 deploy.yml")
-            sys.exit(1)
-            
-        # TODO: 实现部署逻辑
-        print("部署功能开发中...")
-        
+
+        # 删除旧的构建文件
+        print("清理旧文件...")
+        for item in ['css', 'posts', 'tags', 'index.html', 'feed.xml']:
+            if os.path.exists(item):
+                if os.path.isdir(item):
+                    shutil.rmtree(item)
+                else:
+                    os.remove(item)
+
+        # 复制新构建的文件
+        print("复制新文件...")
+        for item in os.listdir('public'):
+            src = os.path.join('public', item)
+            if os.path.isdir(src):
+                shutil.copytree(src, item, dirs_exist_ok=True)
+            else:
+                shutil.copy2(src, item)
+
+        # 提交更改
+        print("提交更改...")
+        os.system('git add .')
+        os.system(f'git commit -m "Update blog content {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
+
+        # 推送到远程仓库
+        print("推送到 GitHub...")
+        os.system('git push origin master')
+
+        print("✨ 部署完成！")
+
     except Exception as e:
         print(f"错误: 部署失败 - {e}")
         sys.exit(1)
