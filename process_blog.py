@@ -14,6 +14,43 @@ MD_DIR = 'source/_posts'
 HTML_DIR = 'html_articles'
 RESOURCES_DIR = 'resources'  # 用于存储静态资源
 
+def clean_metadata_from_content(content):
+    """清理内容中可能存在的元数据字符串"""
+    # 移除常见的前置元数据格式
+    patterns = [
+        r'title:\s+[^\s]+ date:\s+"[^"]+" tags:\s+\[[^\]]*\] author:\s*',
+        r'title:\s+[^\s]+ date:\s+"[^"]+" tags:\s+\[[^\]]*\]',
+        r'date:\s+"[^"]+" tags:\s+\[[^\]]*\] author:\s*',
+        r'title:\s+[^\s]+ date:\s+"[^"]+"',
+        r'title:\s+[^\s]+ tags:\s+\[[^\]]*\]',
+        r'<p>title:.+?</p>',
+        r'<p>date:.+?</p>',
+        r'<p>tags:.+?</p>',
+        r'<p>author:.+?</p>',
+        r'title:.*?\n',
+        r'date:.*?\n',
+        r'tags:.*?\n',
+        r'author:.*?\n',
+        r'title:.*? date:.*? tags:.*? author:.*?',
+        r'title:.*? date:.*? tags:.*?',
+        r'date:.*? tags:.*? author:.*?',
+        r'title:.*? date:.*?',
+        r'title:.*?date:.*?tags:.*?author:.*?',
+        r'title: .+',
+        r'date: .+',
+        r'tags: .+',
+        r'author: .+'
+    ]
+    
+    cleaned_content = content
+    for pattern in patterns:
+        cleaned_content = re.sub(pattern, '', cleaned_content, flags=re.IGNORECASE)
+    
+    # 清理其他可能存在的元数据和格式
+    cleaned_content = re.sub(r'^---$.*?^---$', '', cleaned_content, flags=re.MULTILINE | re.DOTALL)
+    
+    return cleaned_content.strip()
+
 def parse_frontmatter(content):
     """解析Markdown文件的前置数据"""
     pattern = r'^---\n(.*?)\n---\n(.*)'
@@ -26,6 +63,9 @@ def parse_frontmatter(content):
             return frontmatter, content
         except Exception as e:
             print(f"解析前置数据错误: {e}")
+    
+    # 如果没有找到前置元数据，检查并移除可能直接写在内容开头的元数据
+    content = clean_metadata_from_content(content)
     return {}, content
 
 def extract_template_from_master():
@@ -347,11 +387,63 @@ def generate_articles():
             # 解析前置数据
             frontmatter, content = parse_frontmatter(md_content)
             
+            # 确保内容中没有元数据字符串
+            content = clean_metadata_from_content(content)
+            
+            # 转换为HTML前清理Markdown源码中的元数据
+            content = clean_metadata_from_content(content)
+            
+            # 移除Markdown源码中的HTML标签
+            content = re.sub(r'<[^>]+>', '', content)
+            
+            # 分析文件内容，尝试提取第一个标题作为备用标题
+            first_heading_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+            backup_title = first_heading_match.group(1).strip() if first_heading_match else None
+            
             # 转换为HTML
             html_content = markdown.markdown(content, extensions=['tables', 'fenced_code'])
             
-            # 获取文章信息
-            title = frontmatter.get('title', filename.replace('.md', ''))
+            # 再次清理可能残留在内容中的元数据文本
+            html_content = clean_metadata_from_content(html_content)
+            
+            # 移除可能的HTML中的元数据段落
+            html_content = re.sub(r'<p>title:.*?</p>', '', html_content, flags=re.IGNORECASE)
+            html_content = re.sub(r'<p>date:.*?</p>', '', html_content, flags=re.IGNORECASE)
+            html_content = re.sub(r'<p>tags:.*?</p>', '', html_content, flags=re.IGNORECASE)
+            html_content = re.sub(r'<p>author:.*?</p>', '', html_content, flags=re.IGNORECASE)
+            
+            # 自动识别可能的元数据段落（开头的几行含有冒号的文本）并移除
+            lines = html_content.split('\n')
+            clean_lines = []
+            skip_mode = True  # 初始默认跳过开头的元数据
+            
+            for line in lines:
+                # 如果是可能的元数据行（含有冒号且在文档开头），跳过
+                if skip_mode and re.search(r'<p>[^:]+:.+</p>', line):
+                    continue
+                else:
+                    # 一旦遇到非元数据行，停止跳过模式
+                    skip_mode = False
+                    clean_lines.append(line)
+            
+            html_content = '\n'.join(clean_lines)
+            
+            # 获取文章信息 - 优先使用frontmatter中的标题
+            title = None
+            
+            # 1. 首先尝试从frontmatter中获取标题
+            if frontmatter and 'title' in frontmatter and frontmatter['title']:
+                title = frontmatter['title']
+            
+            # 2. 如果frontmatter中没有标题，尝试使用第一个Markdown标题作为标题
+            if not title and backup_title:
+                title = backup_title
+            
+            # 3. 如果以上都不存在，才使用文件名
+            if not title:
+                title = filename.replace('.md', '')
+            
+            # 获取日期信息
             date_str = frontmatter.get('date', datetime.now().strftime('%Y-%m-%d'))
             
             # 尝试解析日期以便排序
@@ -412,9 +504,16 @@ def generate_articles():
     # 生成文章列表HTML片段
     article_list_html = ""
     for article in articles:
-        # 生成文章预览内容
-        preview_text = re.sub(r'<[^>]+>', '', article['content'])
-        preview_text = preview_text[:150] + '...' if len(preview_text) > 150 else preview_text
+        # 生成文章预览内容 - 去除所有HTML标签和多余空白
+        raw_content = re.sub(r'<[^>]+>', '', article['content'])
+        # 删除任何剩余的元数据文本
+        raw_content = clean_metadata_from_content(raw_content)
+        # 移除Markdown格式如 #, *, -, ```等
+        raw_content = re.sub(r'[#*`\-_]+', '', raw_content)
+        # 替换连续多个空白为单个空格
+        raw_content = re.sub(r'\s+', ' ', raw_content).strip()
+        # 截取预览文本
+        preview_text = raw_content[:150] + '...' if len(raw_content) > 150 else raw_content
         
         # 使用更简洁的HTML格式，只显示标题和预览内容
         article_list_html += f"""
