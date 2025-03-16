@@ -392,6 +392,44 @@ def deploy(args):
         print(f"错误: 部署失败 - {e}")
         sys.exit(1)
 
+def deploy_source(args):
+    """部署博客源文件到 GitHub Pages 的 blog 分支"""
+    try:
+        # 先构建
+        print("开始构建博客...")
+        builder = BlogBuilder('config.yml')
+        builder.build()
+
+        # 切换到 blog 分支
+        print("切换到 blog 分支...")
+        os.system('git checkout blog')
+        
+        # 添加所有源文件
+        print("添加源文件...")
+        os.system('git add source/')
+        os.system('git add _templates/')
+        os.system('git add config.yml')
+        os.system('git add cato/')
+        os.system('git add *.yml')
+        os.system('git add *.md')
+        
+        # 提交更改
+        print("提交更改...")
+        os.system(f'git commit -m "Update blog source files {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}"')
+        
+        # 推送到远程仓库的 blog 分支
+        print("推送到 GitHub...")
+        os.system('git push origin blog')
+        
+        print("✨ 源文件部署完成！")
+        
+        # 切回 master 分支
+        print("切回 master 分支...")
+        os.system('git checkout master')
+    except Exception as e:
+        print(f"错误: 部署失败 - {e}")
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(description='Cato 静态博客生成器')
     parser.add_argument('--version', action='version', version=f'Cato {__version__}')
@@ -425,6 +463,10 @@ def main():
     # deploy 命令
     deploy_parser = subparsers.add_parser('deploy', aliases=['d'], help='部署到服务器 (d: deploy)')
     
+    # 添加 deploy-source 命令
+    deploy_source_parser = subparsers.add_parser('deploy-source', help='部署博客源文件到 GitHub Pages')
+    deploy_source_parser.add_argument('--branch', default='blog', help='指定部署的分支名称')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -444,7 +486,9 @@ def main():
         'clean': clean,
         'c': clean,        # 别名: clean
         'deploy': deploy,
-        'd': deploy        # 别名: deploy
+        'd': deploy,       # 别名: deploy
+        'deploy-source': deploy_source,
+        'ds': deploy_source
     }
     
     commands[args.command](args)
