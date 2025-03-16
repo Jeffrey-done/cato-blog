@@ -11,6 +11,7 @@ Cato 是一个简单、高效的静态博客生成器，灵感来源于 Hexo，�
 - 🛠️ **自定义主题** - 轻松创建和修改自己的主题
 - 📦 **双分支管理** - master分支用于展示，blog分支存储源文件
 - 🔄 **一键恢复** - 支持从blog分支快速恢复源文件
+- 🤖 **自动部署** - 支持GitHub Actions自动部署，从blog分支更新到master分支
 
 ## 快速安装
 
@@ -106,6 +107,97 @@ cato r
 1. 自动备份当前文件（以防万一）
 2. 从 blog 分支恢复所有源文件
 3. 保持构建后的文件不变
+
+## 自动部署功能
+
+除了手动部署外，Cato博客系统还支持通过GitHub Actions自动部署：
+
+### 自动部署设置
+
+1. 确保您的仓库已经设置好blog分支（存储源文件）和master分支（展示网站）
+2. 在blog分支创建`.github/workflows/auto-deploy.yml`文件
+3. 将以下内容复制到该文件中：
+
+```yaml
+name: 智能更新博客
+
+on:
+  push:
+    branches:
+      - blog
+
+permissions:
+  contents: write
+
+jobs:
+  update-blog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出blog分支
+        uses: actions/checkout@v3
+        with:
+          ref: blog
+          
+      - name: 安装Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+          
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install markdown pyyaml beautifulsoup4
+          
+      - name: 生成文章
+        run: |
+          python process_blog.py
+          
+      - name: 检出master分支
+        uses: actions/checkout@v3
+        with:
+          ref: master
+          path: master-website
+          
+      - name: 智能更新网站
+        run: |
+          # 复制新文章到posts目录
+          mkdir -p master-website/posts
+          cp -n html_articles/*.html master-website/posts/ || echo "没有新文章"
+          
+          # 智能更新首页
+          cp master-website/index.html master-website/index.html.backup
+          python update_index.py master-website/index.html html_articles/article_list.html master-website/index.html
+          
+      - name: 提交到master分支
+        run: |
+          cd master-website
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add posts/ index.html
+          
+          if git diff --staged --quiet; then
+            echo "没有变更需要提交"
+          else
+            git commit -m "更新博客 [自动部署]"
+            git push
+            echo "已更新博客内容"
+          fi
+```
+
+4. 添加辅助脚本：在blog分支添加`process_blog.py`和`update_index.py`文件
+5. 仓库设置：进入GitHub仓库的"Settings" > "Actions" > "General"，在"Workflow permissions"部分选择"Read and write permissions"并保存
+
+### 自动部署工作原理
+
+当您推送内容到blog分支时：
+
+1. GitHub Actions自动触发
+2. 系统会检出blog分支，处理所有Markdown文章并生成HTML文件
+3. 然后检出master分支，并将新生成的文章和更新的首页添加到master分支
+4. 智能首页更新算法会保留原有网站的外观和样式，只更新文章列表部分
+5. 最后将变更推送到master分支，完成自动部署
+
+这种方式特别适合使用Cato移动应用（cato-uni-app）撰写和管理博客内容的用户。
 
 ## 分支说明
 
