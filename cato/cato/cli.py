@@ -400,18 +400,37 @@ def deploy_source(args):
         builder = BlogBuilder('config.yml')
         builder.build()
 
+        # 备份当前的 .gitignore
+        print("备份 .gitignore 文件...")
+        if os.path.exists('.gitignore'):
+            shutil.copy('.gitignore', '.gitignore.bak')
+
+        # 创建新的 .gitignore，只忽略必要的文件
+        print("创建源文件专用的 .gitignore...")
+        with open('.gitignore', 'w', encoding='utf-8') as f:
+            f.write("""# 忽略系统文件
+.DS_Store
+Thumbs.db
+
+# 忽略 Python 缓存文件
+__pycache__/
+*.py[cod]
+
+# 忽略构建目录
+/public/
+
+# 忽略临时文件
+*.bak
+*.tmp
+""")
+
         # 切换到 blog 分支
         print("切换到 blog 分支...")
-        os.system('git checkout blog')
+        os.system('git checkout blog 2>/dev/null || git checkout -b blog')
         
         # 添加所有源文件
         print("添加源文件...")
-        os.system('git add source/')
-        os.system('git add _templates/')
-        os.system('git add config.yml')
-        os.system('git add cato/')
-        os.system('git add *.yml')
-        os.system('git add *.md')
+        os.system('git add .')
         
         # 提交更改
         print("提交更改...")
@@ -426,7 +445,16 @@ def deploy_source(args):
         # 切回 master 分支
         print("切回 master 分支...")
         os.system('git checkout master')
+
+        # 恢复原来的 .gitignore
+        print("恢复原始 .gitignore 文件...")
+        if os.path.exists('.gitignore.bak'):
+            shutil.move('.gitignore.bak', '.gitignore')
+
     except Exception as e:
+        # 确保在发生错误时也恢复 .gitignore
+        if os.path.exists('.gitignore.bak'):
+            shutil.move('.gitignore.bak', '.gitignore')
         print(f"错误: 部署失败 - {e}")
         sys.exit(1)
 
