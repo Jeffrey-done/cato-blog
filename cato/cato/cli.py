@@ -458,6 +458,52 @@ __pycache__/
         print(f"错误: 部署失败 - {e}")
         sys.exit(1)
 
+def restore(args):
+    """从 blog 分支恢复博客文件"""
+    try:
+        print("开始从 blog 分支恢复文件...")
+        
+        # 检查是否有未提交的更改
+        if os.system('git diff-index --quiet HEAD --') != 0:
+            print("警告: 您有未提交的更改。建议先提交或存储(stash)这些更改。")
+            response = input("是否继续？[y/N] ")
+            if response.lower() != 'y':
+                print("已取消恢复操作")
+                return
+        
+        # 创建临时备份目录
+        backup_dir = '../blog-backup-' + datetime.now().strftime('%Y%m%d_%H%M%S')
+        os.makedirs(backup_dir, exist_ok=True)
+        
+        print(f"1. 创建当前文件的备份到: {backup_dir}")
+        # 复制当前文件到备份目录
+        os.system(f'cp -r source config.yml "{backup_dir}/" 2>/dev/null || echo "没有找到需要备份的文件"')
+        
+        print("2. 切换到 blog 分支...")
+        if os.system('git checkout blog') != 0:
+            print("错误: 无法切换到 blog 分支。请确保该分支存在。")
+            print("提示: 使用 'cato ds' 命令可以创建并更新 blog 分支。")
+            return
+            
+        print("3. 复制文件到主分支...")
+        os.system('git checkout blog -- source/ config.yml')
+        
+        print("4. 切回原来的分支...")
+        os.system('git checkout -')
+        
+        print(f"\n✨ 恢复完成！")
+        print(f"- 原文件已备份到: {backup_dir}")
+        print("- 已从 blog 分支恢复最新的文件")
+        print("\n您可以:")
+        print("1. 运行 'cato s' 检查博客是否正常显示")
+        print("2. 检查 source/_posts 目录中的文章")
+        print("3. 检查 config.yml 配置文件")
+        print(f"\n如果需要还原，备份文件在: {backup_dir}")
+        
+    except Exception as e:
+        print(f"错误: 恢复失败 - {e}")
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(description='Cato 静态博客生成器')
     parser.add_argument('--version', action='version', version=f'Cato {__version__}')
@@ -491,9 +537,12 @@ def main():
     # deploy 命令
     deploy_parser = subparsers.add_parser('deploy', aliases=['d'], help='部署到服务器 (d: deploy)')
     
-    # 添加 deploy-source 命令
-    deploy_source_parser = subparsers.add_parser('deploy-source', help='部署博客源文件到 GitHub Pages')
+    # deploy-source 命令
+    deploy_source_parser = subparsers.add_parser('deploy-source', aliases=['ds'], help='部署博客源文件到 GitHub Pages')
     deploy_source_parser.add_argument('--branch', default='blog', help='指定部署的分支名称')
+    
+    # restore 命令
+    restore_parser = subparsers.add_parser('restore', aliases=['r'], help='从 blog 分支恢复文件 (r: restore)')
     
     args = parser.parse_args()
     
@@ -516,7 +565,9 @@ def main():
         'deploy': deploy,
         'd': deploy,       # 别名: deploy
         'deploy-source': deploy_source,
-        'ds': deploy_source
+        'ds': deploy_source,
+        'restore': restore,
+        'r': restore      # 别名: restore
     }
     
     commands[args.command](args)
