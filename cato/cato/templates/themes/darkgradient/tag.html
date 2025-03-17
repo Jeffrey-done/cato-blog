@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="{{ config.language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标签: {{ tag }} - {{ config.site_name }}</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="site-wrapper">
+        <header class="site-header">
+            <div class="site-title">
+                <a href="/">{{ config.site_name }}</a>
+            </div>
+            <nav class="site-nav">
+                <a href="/">首页</a>
+                <a href="/tags.html">分类</a>
+            </nav>
+        </header>
+
+        <main class="site-main">
+            <h1 class="page-title">标签: {{ tag }}</h1>
+            <p class="page-description">共 {{ posts|length }} 篇文章</p>
+
+            <div class="post-list">
+                {% for post in posts %}
+                <article class="post">
+                    <h2 class="post-title">
+                        <a href="{{ post.metadata.url }}">{{ post.metadata.title }}</a>
+                    </h2>
+                    <div class="post-meta">
+                        {{ post.metadata.date.strftime(config.date_format) }}
+                        {% if post.metadata.author %}
+                        · {{ post.metadata.author }}
+                        {% endif %}
+                    </div>
+                    <div class="post-excerpt">
+                        {{ post.metadata.content[:200] + '...' if post.metadata.content|length > 200 else post.metadata.content }}
+                    </div>
+                    {% if post.metadata.tags %}
+                    <div class="post-tags">
+                        {% for t in post.metadata.tags %}
+                        <a href="/tags/{{ t }}.html" class="tag {% if t == tag %}current-tag{% endif %}">{{ t }}</a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p>&copy; {{ now().year }} {{ config.site_name }}. Powered by Cato.</p>
+        </footer>
+    </div>
+</body>
+</html> 
